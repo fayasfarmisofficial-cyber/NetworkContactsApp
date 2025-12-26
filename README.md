@@ -4,9 +4,14 @@ A mobile-first, offline-first professional contacts web app built with React, Ty
 
 ## Features
 
+- **Dark Mode**: System preference detection with manual toggle
+- **Export/Import**: VCF and JSON format support for data backup
+- **Sample Data**: Try the app with sample contacts
+- **Drag & Drop**: Reorder folders easily
+- **QR Scanning**: Scan LinkedIn QR codes
 - **Mobile-First Design**: Optimized for mobile screens (360-430px) with progressive enhancement for desktop
 - **Offline-First**: All data stored locally in IndexedDB, works completely offline
-- **Folder Organization**: Organize contacts into folders (Devs, Engineers, AI Engineers, Investors, GTM, etc.)
+- **Folder Organization**: Organize contacts into folders (Founders, Engineers, Investors, GTM, etc.)
 - **Event Mode**: Automatically assign new contacts to a selected folder
 - **Search**: Real-time search across names, companies, roles, and phone numbers
 - **Contact Management**: Add, edit, delete contacts with phone, LinkedIn, notes, and more
@@ -62,11 +67,14 @@ src/
 │   ├── FolderList.tsx
 │   ├── FolderSelector.tsx
 │   ├── EventModeToggle.tsx
+│   ├── DarkModeToggle.tsx
+│   ├── QRScanner.tsx
 │   └── SearchBar.tsx
 ├── contexts/          # React Context providers
 │   ├── ContactsContext.tsx
 │   ├── FoldersContext.tsx
-│   └── EventModeContext.tsx
+│   ├── EventModeContext.tsx
+│   └── DarkModeContext.tsx
 ├── db/               # IndexedDB operations
 │   ├── index.ts
 │   ├── contacts.ts
@@ -75,7 +83,8 @@ src/
 │   └── index.ts
 ├── utils/            # Utility functions
 │   ├── constants.ts
-│   └── helpers.ts
+│   ├── helpers.ts
+│   └── mockData.ts
 ├── App.tsx           # Main app component
 └── main.tsx          # Entry point
 ```
@@ -98,15 +107,26 @@ src/
 
 ### Folders
 
-- System folders (Devs, Engineers, etc.) are created automatically
+- System folders (Founders, Engineers, etc.) are created automatically
 - Create custom folders in the Folders page
 - System folders cannot be deleted but can be renamed
-- Tap a folder to filter contacts by that folder
+- Drag and drop folders to reorder them
+- Tap a folder to expand/collapse contacts
 
-### Search
+### Export/Import
 
-- Use the search bar to find contacts by name, company, role, or phone number
-- Search works in real-time as you type
+- **Export**: Click the export icon in the header to download contacts as VCF file
+- **Import**: Click the import icon to import contacts from VCF or JSON files
+
+### Sample Data
+
+- Click "Try sample data" to add sample contacts to explore the app
+- Click "Remove sample data" to remove all sample contacts
+
+### Dark Mode
+
+- Toggle dark mode using the toggle in the header
+- App respects your system preference on first load
 
 ## Data Storage
 
@@ -115,6 +135,17 @@ All data is stored locally in the browser's IndexedDB:
 - **Stores**: `contacts`, `folders`
 - Data persists across browser sessions
 - No data is sent to any server
+
+## Deploy to Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/fayasfarmisofficial-cyber/NetworkContactsApp)
+
+Or manually:
+
+1. Push your code to GitHub
+2. Import project in [Vercel](https://vercel.com)
+3. Vercel will auto-detect Vite settings
+4. Click Deploy
 
 ## Browser Support
 
@@ -126,4 +157,3 @@ All data is stored locally in the browser's IndexedDB:
 ## License
 
 Open source - feel free to use and modify as needed.
-
