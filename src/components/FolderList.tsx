@@ -68,52 +68,52 @@ export function FolderList() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-screen bg-page-bg">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center">
+      <div className="bg-surface border-b border-border px-4 py-3 flex items-center">
         <button
           onClick={() => navigate('/')}
-          className="mr-4 text-blue-600 font-medium min-h-[44px] min-w-[44px] flex items-center"
+          className="mr-4 text-accent font-medium min-h-[44px] min-w-[44px] flex items-center transition-opacity duration-150 hover:opacity-80"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h1 className="text-lg font-semibold text-gray-900 flex-1">Folders</h1>
+        <h1 className="text-section-title text-text-primary flex-1">Folders</h1>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
         {folders.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full px-4 text-center">
-            <div className="text-gray-400 text-6xl mb-4">📁</div>
-            <div className="text-gray-600 text-lg font-medium mb-2">No folders</div>
+            <div className="text-text-muted text-6xl mb-4">📁</div>
+            <div className="text-body-primary text-text-secondary mb-2">No folders</div>
           </div>
         ) : (
-          <div className="bg-white">
+          <div className="bg-surface">
             {folders.map(folder => (
               <div
                 key={folder.id}
-                className={`border-b border-gray-100 ${
-                  selectedFolderId === folder.id ? 'bg-blue-50' : 'bg-white'
+                className={`border-b border-border ${
+                  selectedFolderId === folder.id ? 'bg-surface-muted' : 'bg-surface'
                 }`}
               >
                 <div
                   onClick={() => handleFolderClick(folder.id)}
-                  className="px-4 py-4 flex items-center justify-between active:bg-gray-50 cursor-pointer min-h-[44px]"
+                  className="px-4 py-4 flex items-center justify-between active:bg-surface-muted cursor-pointer min-h-[44px] transition-colors duration-150"
                 >
                   <div className="flex-1">
                     <div className="flex items-center">
-                      <span className="text-base font-medium text-gray-900">
+                      <span className="text-body-secondary text-text-primary font-medium">
                         {folder.name}
                       </span>
                       {folder.system && (
-                        <span className="ml-2 text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                        <span className="ml-2 text-meta text-text-muted bg-surface-muted px-2 py-0.5 rounded">
                           System
                         </span>
                       )}
                     </div>
-                    <div className="text-sm text-gray-500 mt-0.5">
+                    <div className="text-helper text-text-secondary mt-0.5">
                       {getContactCount(folder.id)} contact{getContactCount(folder.id) !== 1 ? 's' : ''}
                     </div>
                   </div>
@@ -123,23 +123,24 @@ export function FolderList() {
                       handleDeleteFolder(folder);
                     }}
                     disabled={deletingId === folder.id}
-                    className="ml-4 text-red-600 active:text-red-700 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                    className="ml-4 p-2 text-red-600 hover:bg-red-50 active:bg-red-100 rounded-lg min-w-[36px] min-h-[36px] flex items-center justify-center transition-colors duration-150 disabled:opacity-50"
                     aria-label="Delete folder"
+                    title="Delete folder"
                   >
                     {deletingId === folder.id ? (
-                      <div className="text-sm">Deleting...</div>
+                      <span className="text-helper text-red-600 font-medium">Deleting...</span>
                     ) : (
                       <svg
                         className="w-5 h-5"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
+                        strokeWidth={2}
                       >
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
                         />
                       </svg>
                     )}
@@ -152,14 +153,14 @@ export function FolderList() {
 
         {/* New Folder Input */}
         {showNewFolderInput ? (
-          <div className="bg-white border-t border-gray-200 px-4 py-4">
+          <div className="bg-surface border-t border-border px-4 py-4">
             <input
               type="text"
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
               placeholder="Folder name"
               autoFocus
-              className="w-full px-4 py-2.5 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-3"
+              className="w-full px-4 py-2.5 text-body-secondary bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent mb-3 text-text-primary placeholder:text-text-muted transition-colors duration-150"
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
                   handleCreateFolder();
@@ -172,7 +173,8 @@ export function FolderList() {
             <div className="flex gap-2">
               <button
                 onClick={handleCreateFolder}
-                className="flex-1 bg-blue-600 text-white font-medium py-2.5 rounded-lg active:bg-blue-700 min-h-[44px]"
+                className="flex-1 bg-accent text-white font-medium py-2.5 rounded-lg active:opacity-90 min-h-[44px] transition-opacity duration-150"
+                style={{ backgroundColor: 'var(--color-accent)' }}
               >
                 Create
               </button>
@@ -181,7 +183,7 @@ export function FolderList() {
                   setShowNewFolderInput(false);
                   setNewFolderName('');
                 }}
-                className="flex-1 bg-gray-200 text-gray-700 font-medium py-2.5 rounded-lg active:bg-gray-300 min-h-[44px]"
+                className="flex-1 bg-surface-muted text-text-primary font-medium py-2.5 rounded-lg active:bg-surface-muted min-h-[44px] transition-colors duration-150"
               >
                 Cancel
               </button>
@@ -190,7 +192,7 @@ export function FolderList() {
         ) : (
           <button
             onClick={() => setShowNewFolderInput(true)}
-            className="w-full bg-white border-t border-gray-200 px-4 py-4 text-blue-600 font-medium active:bg-gray-50 min-h-[44px]"
+            className="w-full bg-surface border-t border-border px-4 py-4 text-accent font-medium active:bg-surface-muted min-h-[44px] transition-colors duration-150"
           >
             + Create New Folder
           </button>

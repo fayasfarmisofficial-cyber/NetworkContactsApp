@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { ContactsProvider } from './contexts/ContactsContext';
 import { FoldersProvider } from './contexts/FoldersContext';
 import { EventModeProvider } from './contexts/EventModeContext';
+import { DarkModeProvider } from './contexts/DarkModeContext';
 import { ContactList } from './components/ContactList';
 import { ContactDetail } from './components/ContactDetail';
 import { ContactForm } from './components/ContactForm';
@@ -30,13 +31,15 @@ function AppContent() {
 function App() {
   return (
     <BrowserRouter>
-      <ContactsProvider>
-        <FoldersProvider>
-          <EventModeProvider>
-            <AppContent />
-          </EventModeProvider>
-        </FoldersProvider>
-      </ContactsProvider>
+      <DarkModeProvider>
+        <ContactsProvider>
+          <FoldersProvider>
+            <EventModeProvider>
+              <AppContent />
+            </EventModeProvider>
+          </FoldersProvider>
+        </ContactsProvider>
+      </DarkModeProvider>
     </BrowserRouter>
   );
 }

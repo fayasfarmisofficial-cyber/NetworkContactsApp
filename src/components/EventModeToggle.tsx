@@ -23,21 +23,22 @@ export function EventModeToggle() {
     : null;
 
   return (
-    <div className="bg-white border-b border-gray-200">
+    <div className="bg-surface border-b border-border">
       {eventMode.enabled && activeFolder ? (
-        <div className="px-4 py-3 bg-blue-50 border-b-2 border-blue-600">
+        <div className="px-4 py-3 bg-surface-muted border-b-2 border-accent">
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <div className="text-xs text-blue-600 uppercase tracking-wide font-semibold mb-1">
+              <div className="text-meta text-accent uppercase tracking-wide font-semibold mb-1">
                 Event Mode ON
               </div>
-              <div className="text-sm font-medium text-blue-900">
+              <div className="text-helper font-medium text-text-primary">
                 Active Folder: {activeFolder.name}
               </div>
             </div>
             <button
               onClick={toggleEventMode}
-              className="ml-4 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg active:bg-blue-700 min-h-[44px]"
+              className="ml-4 px-4 py-2 bg-accent text-white text-helper font-medium rounded-lg active:opacity-90 min-h-[44px] transition-opacity duration-150"
+              style={{ backgroundColor: 'var(--color-accent)' }}
             >
               Turn OFF
             </button>
@@ -47,8 +48,8 @@ export function EventModeToggle() {
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm font-medium text-gray-900 mb-1">Event Mode</div>
-              <div className="text-xs text-gray-500">
+              <div className="text-helper font-medium text-text-primary mb-1">Event Mode</div>
+              <div className="text-meta text-text-secondary">
                 Auto-assign new contacts to a folder
               </div>
             </div>
@@ -64,7 +65,7 @@ export function EventModeToggle() {
                 setActiveFolderId(folderId);
                 setEventModeEnabled(true);
               }}
-              className="ml-4 px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg active:bg-gray-300 min-h-[44px]"
+              className="ml-4 px-4 py-2 bg-surface border border-border text-text-primary text-helper font-medium rounded-lg hover:bg-surface-muted active:bg-surface-muted min-h-[44px] transition-colors duration-150"
             >
               Turn ON
             </button>
@@ -74,18 +75,19 @@ export function EventModeToggle() {
 
       {/* Folder Quick Select */}
       {eventMode.enabled && folders.length > 0 && (
-        <div className="px-4 pb-3 border-t border-gray-100 pt-3">
-          <div className="text-xs text-gray-500 uppercase tracking-wide mb-2">Select Active Folder</div>
+        <div className="px-4 pb-3 border-t border-border pt-3">
+          <div className="text-meta text-text-secondary uppercase tracking-wide mb-2">Select Active Folder</div>
           <div className="flex flex-wrap gap-2">
             {folders.map(folder => (
               <button
                 key={folder.id}
                 onClick={() => handleFolderSelect(folder.id)}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium min-h-[44px] ${
+                className={`px-3 py-1.5 rounded-full text-helper font-medium min-h-[44px] transition-colors duration-150 ${
                   eventMode.activeFolderId === folder.id
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 active:bg-gray-200'
+                    ? 'bg-accent text-white active:opacity-90'
+                    : 'bg-surface border border-border text-text-primary active:bg-surface-muted'
                 }`}
+                style={eventMode.activeFolderId === folder.id ? { backgroundColor: 'var(--color-accent)' } : undefined}
               >
                 {folder.name}
               </button>

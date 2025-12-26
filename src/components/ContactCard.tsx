@@ -3,6 +3,7 @@ import { Contact } from '../types';
 
 interface ContactCardProps {
   contact: Contact;
+  isLast?: boolean;
 }
 
 function getInitials(name: string): string {
@@ -13,22 +14,9 @@ function getInitials(name: string): string {
   return name.substring(0, 2).toUpperCase();
 }
 
-function getAvatarColor(name: string): string {
-  const colors = [
-    'bg-blue-500',
-    'bg-green-500',
-    'bg-purple-500',
-    'bg-pink-500',
-    'bg-indigo-500',
-    'bg-yellow-500',
-    'bg-red-500',
-    'bg-teal-500',
-  ];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return colors[Math.abs(hash) % colors.length];
+function getAvatarColor(): string {
+  // Use accent color for all avatars to maintain consistency
+  return 'bg-accent';
 }
 
 export function ContactCard({ contact }: ContactCardProps) {
@@ -50,40 +38,46 @@ export function ContactCard({ contact }: ContactCardProps) {
     }
   };
 
+  // Prioritize company over role for secondary text
+  const secondaryText = contact.company || contact.role || null;
+
   return (
     <div
       onClick={handleClick}
-      className="bg-white px-4 py-3 hover:bg-gray-50 active:bg-gray-100 cursor-pointer transition-colors flex items-center gap-4 border-b border-gray-100"
+      className="bg-surface px-4 py-3.5 hover:bg-[#1f1f21] active:bg-[#1f1f21] cursor-pointer transition-colors duration-150 flex items-center gap-3.5"
+      style={{
+        backgroundColor: 'var(--color-surface)',
+      }}
     >
       {/* Avatar */}
-      <div className={`${getAvatarColor(contact.name)} w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0`}>
-        <span className="text-white text-sm font-medium">
+      <div className={`${getAvatarColor()} w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0`} style={{ backgroundColor: 'var(--color-accent)' }}>
+        <span className="text-white text-sm font-medium leading-none">
           {getInitials(contact.name)}
         </span>
       </div>
 
       {/* Contact Info */}
       <div className="flex-1 min-w-0">
-        <div className="text-[15px] font-normal text-gray-900 truncate">
+        <div className="text-body-secondary text-text-primary truncate font-medium leading-snug">
           {contact.name}
         </div>
-        {(contact.company || contact.role) && (
-          <div className="text-sm text-gray-500 truncate mt-0.5">
-            {contact.company || contact.role}
+        {secondaryText && (
+          <div className="text-helper text-text-secondary truncate mt-1 leading-snug">
+            {secondaryText}
           </div>
         )}
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 flex-shrink-0">
         {/* Call Button */}
         <button
           onClick={handlePhoneClick}
-          className="p-2 text-gray-600 hover:bg-gray-100 active:bg-gray-200 rounded-full min-w-[40px] min-h-[40px] flex items-center justify-center transition-colors"
+          className="p-2 text-text-secondary hover:bg-[#1f1f21] active:bg-[#1f1f21] rounded-full min-w-[36px] min-h-[36px] flex items-center justify-center transition-colors duration-150"
           aria-label="Call"
         >
           <svg
-            className="w-5 h-5"
+            className="w-5 h-5 opacity-70"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -101,7 +95,7 @@ export function ContactCard({ contact }: ContactCardProps) {
         {contact.linkedin && (
           <button
             onClick={handleLinkedInClick}
-            className="p-2 text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-full min-w-[40px] min-h-[40px] flex items-center justify-center transition-colors"
+            className="p-2 text-accent hover:bg-[#1f1f21] active:bg-[#1f1f21] rounded-full min-w-[36px] min-h-[36px] flex items-center justify-center transition-colors duration-150"
             aria-label="LinkedIn"
           >
             <svg
