@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Contact, ContactFormData } from '../types';
+import { ContactFormData } from '../types';
 import { useContacts } from '../contexts/ContactsContext';
 import { useFolders } from '../contexts/FoldersContext';
 import { useEventMode } from '../contexts/EventModeContext';
 import { FolderSelector } from './FolderSelector';
-import { QRScanner } from './QRScanner';
+import { QRScanner, QRScanResult } from './QRScanner';
 import { getContactById } from '../db/contacts';
 
 export function ContactForm() {
@@ -262,8 +262,12 @@ export function ContactForm() {
       {/* QR Scanner Modal */}
       {showQRScanner && (
         <QRScanner
-          onScan={(linkedinUrl) => {
-            setFormData({ ...formData, linkedin: linkedinUrl });
+          onScan={(result: QRScanResult) => {
+            setFormData({ 
+              ...formData, 
+              linkedin: result.linkedin,
+              name: result.name || formData.name, // Only update name if it was extracted
+            });
             setShowQRScanner(false);
           }}
           onClose={() => setShowQRScanner(false)}

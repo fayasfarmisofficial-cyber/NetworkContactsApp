@@ -1,8 +1,13 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 
+export interface QRScanResult {
+  linkedin: string;
+  name?: string;
+}
+
 interface QRScannerProps {
-  onScan: (result: string) => void;
+  onScan: (result: QRScanResult) => void;
   onClose: () => void;
 }
 
@@ -32,20 +37,90 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
     let timeoutId: NodeJS.Timeout | null = null;
     let rafId: number | null = null;
 
+    // Helper function to unescape vCard values
+    const unescapeVcfValue = (value: string): string => {
+      return value
+        .replace(/\\n/g, '\n')
+        .replace(/\\r/g, '\r')
+        .replace(/\\t/g, '\t')
+        .replace(/\\,/g, ',')
+        .replace(/\\;/g, ';')
+        .replace(/\\\\/g, '\\');
+    };
+
+    // Parse vCard data from QR code
+    const parseVCard = (vcfData: string): { name?: string; linkedin?: string } => {
+      const result: { name?: string; linkedin?: string } = {};
+      
+      if (!vcfData.includes('BEGIN:VCARD')) {
+        return result;
+      }
+
+      const lines = vcfData.split(/\r?\n/);
+      
+      lines.forEach(line => {
+        const upperLine = line.toUpperCase();
+        if (upperLine.startsWith('FN:')) {
+          result.name = unescapeVcfValue(line.substring(3).trim());
+        } else if (upperLine.startsWith('URL:')) {
+          const url = unescapeVcfValue(line.substring(4).trim());
+          if (url.includes('linkedin.com') || url.includes('linked.in')) {
+            result.linkedin = url;
+          }
+        }
+      });
+      
+      return result;
+    };
+
+    // Extract name from LinkedIn URL (fallback method)
+    const extractNameFromLinkedInUrl = (url: string): string | undefined => {
+      try {
+        // Try to extract name from URL path like /in/john-doe/
+        const match = url.match(/\/in\/([^\/\?]+)/);
+        if (match && match[1]) {
+          // Convert "john-doe" to "John Doe"
+          return match[1]
+            .split('-')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+        }
+      } catch {
+        // Ignore errors
+      }
+      return undefined;
+    };
+
     // Handle scan result - defined inside useEffect to avoid dependency issues
     const handleScanResult = (decodedText: string) => {
       if (!mountedRef.current || !scannerRef.current) return;
 
       try {
         const normalizedText = decodedText.trim();
-        const isLinkedInUrl = 
-          normalizedText.includes('linkedin.com') || 
-          normalizedText.includes('linked.in') ||
-          (normalizedText.startsWith('http') && normalizedText.toLowerCase().includes('linkedin'));
-        
-        if (isLinkedInUrl) {
+        let linkedinUrl: string | undefined;
+        let name: string | undefined;
+
+        // Check if it's a vCard format
+        if (normalizedText.includes('BEGIN:VCARD')) {
+          const vCardData = parseVCard(normalizedText);
+          linkedinUrl = vCardData.linkedin;
+          name = vCardData.name;
+        } else {
+          // Check if it's a LinkedIn URL
+          const isLinkedInUrl = 
+            normalizedText.includes('linkedin.com') || 
+            normalizedText.includes('linked.in') ||
+            (normalizedText.startsWith('http') && normalizedText.toLowerCase().includes('linkedin'));
+          
+          if (isLinkedInUrl) {
+            linkedinUrl = normalizedText;
+            // Try to extract name from URL as fallback
+            name = extractNameFromLinkedInUrl(normalizedText);
+          }
+        }
+
+        if (linkedinUrl) {
           // Normalize the URL
-          let linkedinUrl = normalizedText;
           if (!linkedinUrl.startsWith('http://') && !linkedinUrl.startsWith('https://')) {
             linkedinUrl = 'https://' + linkedinUrl;
           }
@@ -60,14 +135,21 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
               // Ignore stop errors
             })
             .finally(() => {
-              scanner.clear().catch(() => {});
+              try {
+                scanner.clear();
+              } catch {
+                // Ignore clear errors
+              }
               
               // Call callbacks after a small delay
               if (mountedRef.current) {
                 setTimeout(() => {
                   if (mountedRef.current) {
                     try {
-                      onScanRef.current(linkedinUrl);
+                      onScanRef.current({
+                        linkedin: linkedinUrl,
+                        name: name,
+                      });
                       onCloseRef.current();
                     } catch (err) {
                       console.error('Callback error:', err);
@@ -133,7 +215,11 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
         const html5QrCode = new Html5Qrcode(elementId);
         
         if (!mountedRef.current) {
-          html5QrCode.clear().catch(() => {});
+          try {
+            html5QrCode.clear();
+          } catch {
+            // Ignore clear errors
+          }
           initializingRef.current = false;
           return;
         }
@@ -157,7 +243,11 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
         }
 
         if (!mountedRef.current) {
-          html5QrCode.clear().catch(() => {});
+          try {
+            html5QrCode.clear();
+          } catch {
+            // Ignore clear errors
+          }
           initializingRef.current = false;
           return;
         }
@@ -233,7 +323,11 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
             // Ignore stop errors
           })
           .finally(() => {
-            scanner.clear().catch(() => {});
+            try {
+              scanner.clear();
+            } catch {
+              // Ignore clear errors
+            }
           });
       }
 
@@ -253,12 +347,16 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
       const scanner = scannerRef.current;
       scannerRef.current = null;
       
-      scanner.stop()
-        .catch(() => {})
-        .finally(() => {
-          scanner.clear().catch(() => {});
-          onCloseRef.current();
-        });
+        scanner.stop()
+          .catch(() => {})
+          .finally(() => {
+            try {
+              scanner.clear();
+            } catch {
+              // Ignore clear errors
+            }
+            onCloseRef.current();
+          });
     } else {
       onCloseRef.current();
     }
