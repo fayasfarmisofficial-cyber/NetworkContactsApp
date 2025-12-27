@@ -17,6 +17,7 @@ export function ContactList() {
   const [draggedFolderId, setDraggedFolderId] = useState<string | null>(null);
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<string>>(new Set());
+  const [hasInitializedExpansion, setHasInitializedExpansion] = useState(false);
   const [isPopulatingMockData, setIsPopulatingMockData] = useState(false);
   const [isRemovingMockData, setIsRemovingMockData] = useState(false);
   const [showAllContacts, setShowAllContacts] = useState<Record<string, boolean>>({});
@@ -97,9 +98,11 @@ export function ContactList() {
     initializeSampleData();
   }, [folders, contacts.length, loading, addMultipleContacts]);
 
-  // Auto-expand all folders with contacts (but not during bulk operations)
+  // Auto-expand all folders with contacts on initial load only (but not during bulk operations)
   useEffect(() => {
-    if (isBulkOperation) return;
+    if (isBulkOperation || hasInitializedExpansion) return;
+    if (foldersWithContacts.length === 0) return;
+    
     const foldersToExpand = new Set<string>();
     foldersWithContacts.forEach(({ folder, count }) => {
       if (count > 0) {
@@ -107,7 +110,8 @@ export function ContactList() {
       }
     });
     setExpandedFolderIds(foldersToExpand);
-  }, [foldersWithContacts, isBulkOperation]);
+    setHasInitializedExpansion(true);
+  }, [foldersWithContacts.length, isBulkOperation, hasInitializedExpansion]);
 
   const handleFolderToggle = (folderId: string) => {
     setExpandedFolderIds(prev => {
@@ -404,11 +408,11 @@ export function ContactList() {
             disabled={isPopulatingMockData || loading}
             className="px-4 py-2 bg-accent text-white text-helper font-medium rounded-lg hover:opacity-90 active:opacity-80 disabled:opacity-50 transition-opacity duration-150 min-h-[36px]"
             style={{ backgroundColor: 'var(--color-accent)' }}
-            title={contacts.filter(isMockContact).length > 0 ? 'Remove sample contacts' : 'Add sample contacts'}
+            title={contacts.filter(isMockContact).length > 0 ? 'Remove all sample contacts' : 'Add sample contacts'}
           >
             {isPopulatingMockData 
               ? (contacts.filter(isMockContact).length > 0 ? 'Removing...' : 'Adding...') 
-              : (contacts.filter(isMockContact).length > 0 ? 'Remove sample data' : 'Try sample data')
+              : (contacts.filter(isMockContact).length > 0 ? 'Remove mock contacts' : 'Try sample data')
             }
           </button>
           <DarkModeToggle />
@@ -485,7 +489,7 @@ export function ContactList() {
             >
               {isPopulatingMockData 
                 ? (contacts.filter(isMockContact).length > 0 ? 'Removing sample contacts...' : 'Adding sample contacts...') 
-                : (contacts.filter(isMockContact).length > 0 ? 'Remove sample data' : 'Try sample data')
+                : (contacts.filter(isMockContact).length > 0 ? `Remove ${contacts.filter(isMockContact).length} sample contacts` : 'Try sample data')
               }
             </button>
           </div>
@@ -520,7 +524,7 @@ export function ContactList() {
             >
               {isPopulatingMockData 
                 ? (contacts.filter(isMockContact).length > 0 ? 'Removing sample contacts...' : 'Adding sample contacts...') 
-                : (contacts.filter(isMockContact).length > 0 ? 'Remove sample data' : 'Try sample data')
+                : (contacts.filter(isMockContact).length > 0 ? `Remove ${contacts.filter(isMockContact).length} sample contacts` : 'Try sample data')
               }
             </button>
           </div>
@@ -552,9 +556,17 @@ export function ContactList() {
                 >
                   {/* Folder Header */}
                   <div
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       if (!isEmpty) {
                         handleFolderToggle(folder.id);
+                      }
+                    }}
+                    onMouseDown={(e) => {
+                      // Prevent text selection on click
+                      if (!isEmpty) {
+                        e.preventDefault();
                       }
                     }}
                     className={`sticky top-[57px] px-4 py-3.5 z-[5] select-none ${
@@ -564,7 +576,7 @@ export function ContactList() {
                           ? '' 
                           : 'border-b border-border/20'
                     } ${
-                      !isEmpty ? 'cursor-pointer' : ''
+                      !isEmpty ? 'cursor-pointer active:opacity-80' : 'cursor-default'
                     } transition-all duration-150`}
                     style={{
                       backgroundColor: dragOverFolderId === folder.id
@@ -584,7 +596,7 @@ export function ContactList() {
                             className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${
                               isExpanded 
                                 ? 'rotate-90 text-text-secondary' 
-                                : 'text-text-muted opacity-60'
+                                : 'rotate-0 text-text-muted opacity-60'
                             }`}
                             fill="none"
                             stroke="currentColor"
