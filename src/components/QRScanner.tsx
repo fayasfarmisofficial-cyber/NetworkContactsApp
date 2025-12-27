@@ -121,10 +121,11 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
 
         if (linkedinUrl) {
           // Normalize the URL
-          if (!linkedinUrl.startsWith('http://') && !linkedinUrl.startsWith('https://')) {
-            linkedinUrl = 'https://' + linkedinUrl;
+          let normalizedLinkedInUrl = linkedinUrl;
+          if (!normalizedLinkedInUrl.startsWith('http://') && !normalizedLinkedInUrl.startsWith('https://')) {
+            normalizedLinkedInUrl = 'https://' + normalizedLinkedInUrl;
           }
-          linkedinUrl = linkedinUrl.replace(/^http:\/\//, 'https://');
+          normalizedLinkedInUrl = normalizedLinkedInUrl.replace(/^http:\/\//, 'https://');
           
           // Stop scanner first
           const scanner = scannerRef.current;
@@ -147,7 +148,7 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
                   if (mountedRef.current) {
                     try {
                       onScanRef.current({
-                        linkedin: linkedinUrl,
+                        linkedin: normalizedLinkedInUrl,
                         name: name,
                       });
                       onCloseRef.current();
