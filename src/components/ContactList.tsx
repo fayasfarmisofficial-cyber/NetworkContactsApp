@@ -7,9 +7,10 @@ import { ContactCard } from './ContactCard';
 import { sortContactsAlphabetically } from '../utils/helpers';
 import { generateMockContacts, isMockContact } from '../utils/mockData';
 import { Contact } from '../types';
-import { SAMPLE_DATA_INITIALIZED_KEY } from '../utils/constants';
+import { SAMPLE_DATA_INITIALIZED_KEY, WELCOME_POPUP_DISABLED_KEY } from '../utils/constants';
 import { showToast } from './Toast';
 import { useAppKeyboardShortcuts } from '../utils/keyboardShortcuts';
+import { WelcomePopup } from './WelcomePopup';
 
 export function ContactList() {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ export function ContactList() {
   const [isRemovingMockData, setIsRemovingMockData] = useState(false);
   const [showAllContacts, setShowAllContacts] = useState<Record<string, boolean>>({});
   const [isBulkOperation, setIsBulkOperation] = useState(false);
+  const [showWelcomePopup, setShowWelcomePopup] = useState(false);
 
   // Filter contacts by search query
   const filteredContacts = searchQuery.trim()
@@ -101,6 +103,24 @@ export function ContactList() {
 
     initializeSampleData();
   }, [folders, contacts.length, loading, addMultipleContacts]);
+
+  // Show welcome popup when sample data exists (if not disabled)
+  useEffect(() => {
+    if (loading) return;
+    
+    const isPopupDisabled = localStorage.getItem(WELCOME_POPUP_DISABLED_KEY) === 'true';
+    if (isPopupDisabled) {
+      setShowWelcomePopup(false);
+      return;
+    }
+
+    const hasSampleData = contacts.some(isMockContact);
+    if (hasSampleData && !showWelcomePopup) {
+      setShowWelcomePopup(true);
+    } else if (!hasSampleData && showWelcomePopup) {
+      setShowWelcomePopup(false);
+    }
+  }, [contacts, loading, showWelcomePopup]);
 
   // Auto-expand all folders with contacts on initial load only (but not during bulk operations)
   useEffect(() => {
@@ -465,6 +485,13 @@ export function ContactList() {
       </div>
 
       <div className="flex-1 overflow-y-auto bg-page-bg relative">
+        {/* Welcome Popup */}
+        {showWelcomePopup && (
+          <WelcomePopup
+            onClose={() => setShowWelcomePopup(false)}
+          />
+        )}
+        
         {isPopulatingMockData && (
           <div className="absolute inset-0 bg-page-bg/80 backdrop-blur-sm z-50 flex items-center justify-center">
             <div className="bg-surface rounded-lg px-6 py-4 shadow-lg border border-border">

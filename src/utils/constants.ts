@@ -14,6 +14,7 @@ export const CONTACTS_STORE = 'contacts';
 export const FOLDERS_STORE = 'folders';
 export const SAMPLE_DATA_INITIALIZED_KEY = 'networkContacts_sampleDataInitialized';
 export const WELCOME_POPUP_SHOWN_KEY = 'networkContacts_welcomePopupShown';
+export const WELCOME_POPUP_DISABLED_KEY = 'networkContacts_welcomePopupDisabled';
 export const SHOW_ALL_CONTACTS_KEY = 'networkContacts_showAllContacts';
 export const SHOW_SAMPLE_CONTACTS_KEY = 'networkContacts_showSampleContacts';
 

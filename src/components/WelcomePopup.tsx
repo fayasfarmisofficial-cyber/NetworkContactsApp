@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { WELCOME_POPUP_DISABLED_KEY } from '../utils/constants';
 
 interface WelcomePopupProps {
   onClose: () => void;
@@ -6,10 +8,21 @@ interface WelcomePopupProps {
 
 export function WelcomePopup({ onClose }: WelcomePopupProps) {
   const navigate = useNavigate();
+  const [neverShowAgain, setNeverShowAgain] = useState(false);
 
   const handleGoToSettings = () => {
+    if (neverShowAgain) {
+      localStorage.setItem(WELCOME_POPUP_DISABLED_KEY, 'true');
+    }
     onClose();
     navigate('/settings');
+  };
+
+  const handleKeepSampleData = () => {
+    if (neverShowAgain) {
+      localStorage.setItem(WELCOME_POPUP_DISABLED_KEY, 'true');
+    }
+    onClose();
   };
 
   return (
@@ -44,21 +57,34 @@ export function WelcomePopup({ onClose }: WelcomePopupProps) {
           We've added some sample contacts to help you get started. You can remove them anytime in Settings.
         </p>
         
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-3 bg-surface-muted text-text-primary font-medium rounded-lg active:opacity-80 min-h-[44px] transition-opacity duration-150"
-            style={{ backgroundColor: 'var(--color-surface-muted)' }}
-          >
-            Got it
-          </button>
+        <div className="flex flex-col gap-3">
           <button
             onClick={handleGoToSettings}
-            className="flex-1 px-4 py-3 bg-accent text-white font-medium rounded-lg active:opacity-80 min-h-[44px] transition-opacity duration-150"
+            className="w-full px-4 py-3 bg-accent text-white font-medium rounded-lg active:opacity-80 min-h-[44px] transition-opacity duration-150"
             style={{ backgroundColor: 'var(--color-accent)' }}
           >
-            Go to Settings
+            Remove Sample Data
           </button>
+          <button
+            onClick={handleKeepSampleData}
+            className="w-full px-4 py-3 bg-surface-muted text-text-primary font-medium rounded-lg active:opacity-80 min-h-[44px] transition-opacity duration-150"
+            style={{ backgroundColor: 'var(--color-surface-muted)' }}
+          >
+            Keep Sample Data
+          </button>
+          
+          <label className="flex items-center gap-2 cursor-pointer pt-2">
+            <input
+              type="checkbox"
+              checked={neverShowAgain}
+              onChange={(e) => setNeverShowAgain(e.target.checked)}
+              className="w-4 h-4 text-accent border-border rounded focus:ring-2 focus:ring-accent cursor-pointer"
+              style={{ accentColor: 'var(--color-accent)' }}
+            />
+            <span className="text-helper text-text-secondary">
+              Never show this popup again
+            </span>
+          </label>
         </div>
       </div>
     </div>
