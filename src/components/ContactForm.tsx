@@ -7,6 +7,8 @@ import { useEventMode } from '../contexts/EventModeContext';
 import { FolderSelector } from './FolderSelector';
 import { QRScanner, QRScanResult } from './QRScanner';
 import { getContactById } from '../db/contacts';
+import { showToast } from './Toast';
+import { formatPhoneNumberLive, isValidPhoneNumber, normalizePhoneNumber, formatPhoneNumber } from '../utils/phoneFormatter';
 
 export function ContactForm() {
   const navigate = useNavigate();
@@ -27,6 +29,7 @@ export function ContactForm() {
     notes: '',
     folders: [],
   });
+  const [errors, setErrors] = useState<{ name?: string; phone?: string }>({});
 
   useEffect(() => {
     if (isEditing && id) {
@@ -39,7 +42,7 @@ export function ContactForm() {
           }
           setFormData({
             name: contact.name,
-            phone: contact.phone,
+            phone: formatPhoneNumber(contact.phone), // Format phone for display
             company: contact.company || '',
             role: contact.role || '',
             linkedin: contact.linkedin || '',
@@ -68,17 +71,33 @@ export function ContactForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validation
+    const newErrors: { name?: string; phone?: string } = {};
+    
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required';
+    }
+    
     if (!formData.phone.trim()) {
-      alert('Phone number is required');
+      newErrors.phone = 'Phone number is required';
+    } else if (!isValidPhoneNumber(formData.phone)) {
+      newErrors.phone = 'Please enter a valid phone number';
+    }
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      showToast('Please fix the errors before saving', 'error');
       return;
     }
+    
+    setErrors({});
 
     try {
       setSaving(true);
       
       const contactData = {
         name: formData.name.trim(),
-        phone: formData.phone.trim(),
+        phone: normalizePhoneNumber(formData.phone), // Store normalized phone number
         company: formData.company.trim() || undefined,
         role: formData.role.trim() || undefined,
         linkedin: formData.linkedin.trim() || undefined,
@@ -88,29 +107,50 @@ export function ContactForm() {
 
       if (isEditing && id) {
         await updateExistingContact(id, contactData);
+        showToast('Contact updated successfully', 'success');
       } else {
         await addNewContact(contactData);
+        showToast('Contact added successfully', 'success');
       }
       
       navigate('/');
     } catch (error) {
       console.error('Error saving contact:', error);
-      alert('Failed to save contact');
+      showToast('Failed to save contact', 'error');
     } finally {
       setSaving(false);
     }
   };
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Format as user types
+    const formatted = formatPhoneNumberLive(value);
+    setFormData({ ...formData, phone: formatted });
+    // Clear phone error when user starts typing
+    if (errors.phone) {
+      setErrors({ ...errors, phone: undefined });
+    }
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, name: e.target.value });
+    // Clear name error when user starts typing
+    if (errors.name) {
+      setErrors({ ...errors, name: undefined });
+    }
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-page-bg">
+      <div className="flex items-center justify-center h-full bg-page-bg">
         <div className="text-body-secondary text-text-secondary">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen bg-page-bg">
+    <div className="flex flex-col h-full bg-page-bg">
       {/* Header */}
       <div className="bg-surface border-b border-border px-4 py-3 flex items-center">
         <button
@@ -138,10 +178,15 @@ export function ContactForm() {
               type="text"
               id="name"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2.5 text-body-secondary bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-text-primary placeholder:text-text-muted transition-colors duration-150"
+              onChange={handleNameChange}
+              className={`w-full px-4 py-2.5 text-body-secondary bg-surface border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-text-primary placeholder:text-text-muted transition-colors duration-150 ${
+                errors.name ? 'border-red-500' : 'border-border'
+              }`}
               required
             />
+            {errors.name && (
+              <p className="mt-1 text-sm text-red-500">{errors.name}</p>
+            )}
           </div>
 
           {/* Phone */}
@@ -153,10 +198,16 @@ export function ContactForm() {
               type="tel"
               id="phone"
               value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full px-4 py-2.5 text-body-secondary bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-text-primary placeholder:text-text-muted transition-colors duration-150"
+              onChange={handlePhoneChange}
+              placeholder="(123) 456-7890"
+              className={`w-full px-4 py-2.5 text-body-secondary bg-surface border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-text-primary placeholder:text-text-muted transition-colors duration-150 ${
+                errors.phone ? 'border-red-500' : 'border-border'
+              }`}
               required
             />
+            {errors.phone && (
+              <p className="mt-1 text-sm text-red-500">{errors.phone}</p>
+            )}
           </div>
 
           {/* Company */}
@@ -169,7 +220,8 @@ export function ContactForm() {
               id="company"
               value={formData.company}
               onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-              className="w-full px-4 py-2.5 text-body-secondary bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-text-primary placeholder:text-text-muted transition-colors duration-150"
+              placeholder="Company name"
+              className="w-full px-4 py-2.5 text-body-secondary bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-text-primary placeholder:text-text-muted transition-colors duration-150"
             />
           </div>
 
@@ -183,7 +235,8 @@ export function ContactForm() {
               id="role"
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-              className="w-full px-4 py-2.5 text-body-secondary bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-text-primary placeholder:text-text-muted transition-colors duration-150"
+              placeholder="Job title or role"
+              className="w-full px-4 py-2.5 text-body-secondary bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-text-primary placeholder:text-text-muted transition-colors duration-150"
             />
           </div>
 
@@ -198,8 +251,8 @@ export function ContactForm() {
                 id="linkedin"
                 value={formData.linkedin}
                 onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
-                placeholder="https://linkedin.com/in/..."
-                className="flex-1 px-4 py-2.5 text-body-secondary bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-text-primary placeholder:text-text-muted transition-colors duration-150"
+              placeholder="https://linkedin.com/in/..."
+              className="flex-1 px-4 py-2.5 text-body-secondary bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-text-primary placeholder:text-text-muted transition-colors duration-150"
               />
               <button
                 type="button"
@@ -226,7 +279,8 @@ export function ContactForm() {
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               rows={4}
-              className="w-full px-4 py-2.5 text-body-secondary bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent resize-none text-text-primary placeholder:text-text-muted transition-colors duration-150"
+              placeholder="Add any additional notes about this contact..."
+              className="w-full px-4 py-2.5 text-body-secondary bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent resize-none text-text-primary placeholder:text-text-muted transition-colors duration-150"
             />
           </div>
 

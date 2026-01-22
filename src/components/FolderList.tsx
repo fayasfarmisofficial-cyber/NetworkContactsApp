@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useFolders } from '../contexts/FoldersContext';
 import { useContacts } from '../contexts/ContactsContext';
 import { Folder } from '../types';
+import { showToast } from './Toast';
 
 export function FolderList() {
   const navigate = useNavigate();
@@ -44,7 +45,7 @@ export function FolderList() {
         setSelectedFolderId(null);
       }
     } catch (error: any) {
-      alert(error.message || 'Failed to delete folder');
+      showToast(error.message || 'Failed to delete folder', 'error');
       setDeletingId(null);
     }
   };
@@ -68,7 +69,7 @@ export function FolderList() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-page-bg">
+    <div className="flex flex-col h-full bg-page-bg">
       {/* Header */}
       <div className="bg-surface border-b border-border px-4 py-3 flex items-center">
         <button

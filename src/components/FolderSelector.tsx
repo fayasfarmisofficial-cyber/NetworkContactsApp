@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Folder } from '../types';
 import { useFolders } from '../contexts/FoldersContext';
 import { useContacts } from '../contexts/ContactsContext';
+import { showToast } from './Toast';
 
 interface FolderSelectorProps {
   folders: Folder[];
@@ -47,7 +48,7 @@ export function FolderSelector({ folders, selectedFolderIds, onChange }: FolderS
         onChange(selectedFolderIds.filter(id => id !== folder.id));
       }
     } catch (error: any) {
-      alert(error.message || 'Failed to delete folder');
+      showToast(error.message || 'Failed to delete folder', 'error');
       setDeletingId(null);
     }
   };

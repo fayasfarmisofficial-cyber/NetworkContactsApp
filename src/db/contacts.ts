@@ -1,5 +1,5 @@
 import { Contact } from '../types';
-import { openDatabase, getDatabase } from './index';
+import { openDatabase } from './index';
 import { CONTACTS_STORE } from '../utils/constants';
 import { generateId } from '../utils/helpers';
 

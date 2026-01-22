@@ -1,8 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Contact } from '../types';
-import { getAllContacts, addContact, updateContact, deleteContact, searchContacts, getContactsByFolder } from '../db/contacts';
-import { SAMPLE_DATA_INITIALIZED_KEY } from '../utils/constants';
-import { generateMockContacts } from '../utils/mockData';
+import { getAllContacts, addContact, updateContact, deleteContact } from '../db/contacts';
 
 interface ContactsContextType {
   contacts: Contact[];

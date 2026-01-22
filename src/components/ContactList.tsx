@@ -4,16 +4,20 @@ import { useContacts } from '../contexts/ContactsContext';
 import { useFolders } from '../contexts/FoldersContext';
 import { SearchBar } from './SearchBar';
 import { ContactCard } from './ContactCard';
-import { DarkModeToggle } from './DarkModeToggle';
 import { sortContactsAlphabetically } from '../utils/helpers';
 import { generateMockContacts, isMockContact } from '../utils/mockData';
 import { Contact } from '../types';
 import { SAMPLE_DATA_INITIALIZED_KEY } from '../utils/constants';
+import { showToast } from './Toast';
+import { useAppKeyboardShortcuts } from '../utils/keyboardShortcuts';
 
 export function ContactList() {
   const navigate = useNavigate();
   const { contacts, loading, searchQuery, addMultipleContacts, removeMultipleContacts, exportContacts, importContacts } = useContacts();
   const { folders, reorderFolders, addFolder, refreshFolders } = useFolders();
+  
+  // Enable keyboard shortcuts
+  useAppKeyboardShortcuts();
   const [draggedFolderId, setDraggedFolderId] = useState<string | null>(null);
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<string>>(new Set());
@@ -160,7 +164,7 @@ export function ContactList() {
         await removeMultipleContacts(idsToRemove);
       } catch (error) {
         console.error('Error removing mock data:', error);
-        alert('Failed to remove sample data');
+        showToast('Failed to remove sample data', 'error');
       } finally {
         setIsPopulatingMockData(false);
         setIsRemovingMockData(false);
@@ -206,7 +210,7 @@ export function ContactList() {
 
       // Final check - if still no folders, show error
       if (folderIds.length === 0) {
-        alert('No folders available. Please create a folder first, then try again.');
+        showToast('No folders available. Please create a folder first, then try again.', 'error');
         setIsPopulatingMockData(false);
         return;
       }
@@ -218,7 +222,7 @@ export function ContactList() {
       await addMultipleContacts(mockContactsData);
     } catch (error) {
       console.error('Error populating mock data:', error);
-      alert('Failed to populate mock data');
+      showToast('Failed to populate mock data', 'error');
     } finally {
       setIsPopulatingMockData(false);
       // Delay resetting bulk operation flag to allow UI to stabilize
@@ -303,7 +307,7 @@ export function ContactList() {
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error exporting contacts:', error);
-      alert('Failed to export contacts');
+      showToast('Failed to export contacts', 'error');
     }
   };
 
@@ -318,10 +322,10 @@ export function ContactList() {
       try {
         const text = await file.text();
         await importContacts(text, file.name);
-        alert('Contacts imported successfully!');
+        showToast('Contacts imported successfully!', 'success');
       } catch (error) {
         console.error('Error importing contacts:', error);
-        alert('Failed to import contacts. Please check the file format.');
+        showToast('Failed to import contacts. Please check the file format.', 'error');
       }
     };
     input.click();
@@ -404,19 +408,6 @@ export function ContactList() {
             </svg>
           </button>
           <button
-            onClick={handlePopulateMockData}
-            disabled={isPopulatingMockData || loading}
-            className="px-4 py-2 bg-accent text-white text-helper font-medium rounded-lg hover:opacity-90 active:opacity-80 disabled:opacity-50 transition-opacity duration-150 min-h-[36px]"
-            style={{ backgroundColor: 'var(--color-accent)' }}
-            title={contacts.filter(isMockContact).length > 0 ? 'Remove all sample contacts' : 'Add sample contacts'}
-          >
-            {isPopulatingMockData 
-              ? (contacts.filter(isMockContact).length > 0 ? 'Removing...' : 'Adding...') 
-              : (contacts.filter(isMockContact).length > 0 ? 'Remove mock contacts' : 'Try sample data')
-            }
-          </button>
-          <DarkModeToggle />
-          <button
             onClick={() => navigate('/folders')}
             className="p-2 text-text-secondary hover:bg-surface-muted rounded-full min-w-[40px] min-h-[40px] flex items-center justify-center transition-colors duration-150"
             aria-label="Manage folders"
@@ -432,6 +423,41 @@ export function ContactList() {
                 strokeLinejoin="round"
                 strokeWidth={2}
                 d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+              />
+            </svg>
+          </button>
+          <button
+            onClick={() => navigate('/settings')}
+            className="p-2 rounded-full min-w-[40px] min-h-[40px] flex items-center justify-center transition-colors duration-150"
+            style={{ 
+              color: 'var(--color-text-secondary)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+            aria-label="Settings"
+            title="Settings"
+          >
+            <svg
+              className="w-5 h-5 opacity-70"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
               />
             </svg>
           </button>

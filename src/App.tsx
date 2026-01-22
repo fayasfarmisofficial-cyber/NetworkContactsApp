@@ -2,12 +2,13 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { ContactsProvider } from './contexts/ContactsContext';
 import { FoldersProvider } from './contexts/FoldersContext';
 import { EventModeProvider } from './contexts/EventModeContext';
-import { DarkModeProvider } from './contexts/DarkModeContext';
 import { ContactList } from './components/ContactList';
 import { ContactDetail } from './components/ContactDetail';
 import { ContactForm } from './components/ContactForm';
 import { FolderList } from './components/FolderList';
+import { Settings } from './components/Settings';
 import { EventModeToggle } from './components/EventModeToggle';
+import { ToastContainer } from './components/Toast';
 
 function AppContent() {
   const location = useLocation();
@@ -15,6 +16,7 @@ function AppContent() {
 
   return (
     <div className="app">
+      <ToastContainer />
       {showEventMode && <EventModeToggle />}
       <Routes>
         <Route path="/" element={<ContactList />} />
@@ -22,6 +24,7 @@ function AppContent() {
         <Route path="/contact/:id" element={<ContactDetail />} />
         <Route path="/contact/:id/edit" element={<ContactForm />} />
         <Route path="/folders" element={<FolderList />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
@@ -31,15 +34,13 @@ function AppContent() {
 function App() {
   return (
     <BrowserRouter>
-      <DarkModeProvider>
-        <ContactsProvider>
-          <FoldersProvider>
-            <EventModeProvider>
-              <AppContent />
-            </EventModeProvider>
-          </FoldersProvider>
-        </ContactsProvider>
-      </DarkModeProvider>
+      <ContactsProvider>
+        <FoldersProvider>
+          <EventModeProvider>
+            <AppContent />
+          </EventModeProvider>
+        </FoldersProvider>
+      </ContactsProvider>
     </BrowserRouter>
   );
 }

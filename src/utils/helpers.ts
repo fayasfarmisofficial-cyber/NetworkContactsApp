@@ -47,15 +47,6 @@ export function searchContacts(contacts: Contact[], query: string): Contact[] {
   });
 }
 
-export function formatPhoneNumber(phone: string): string {
-  // Remove all non-digit characters
-  const cleaned = phone.replace(/\D/g, '');
-  
-  // Format as (XXX) XXX-XXXX for US numbers
-  if (cleaned.length === 10) {
-    return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
-  }
-  
-  return phone; // Return as-is if not standard US format
-}
+// Re-export phone formatter for backwards compatibility
+export { formatPhoneNumber } from './phoneFormatter';
 

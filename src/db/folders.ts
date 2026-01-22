@@ -1,6 +1,6 @@
 import { Folder } from '../types';
 import { openDatabase } from './index';
-import { FOLDERS_STORE, CONTACTS_STORE } from '../utils/constants';
+import { FOLDERS_STORE } from '../utils/constants';
 import { DEFAULT_SYSTEM_FOLDERS } from '../utils/constants';
 import { generateId } from '../utils/helpers';
 import { getAllContacts, updateContact } from './contacts';
@@ -158,7 +158,7 @@ export async function initializeSystemFolders(): Promise<Folder[]> {
   // First pass: identify duplicates and old system folders
   for (const folder of existingFolders) {
     if (folder.system) {
-      if (!defaultFolderNames.has(folder.name)) {
+      if (!defaultFolderNames.has(folder.name as typeof DEFAULT_SYSTEM_FOLDERS[number])) {
         // Old system folder not in default list - mark for deletion
         foldersToDelete.push(folder);
       } else {

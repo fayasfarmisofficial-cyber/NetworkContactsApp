@@ -1,6 +1,7 @@
 import { useEventMode } from '../contexts/EventModeContext';
 import { useFolders } from '../contexts/FoldersContext';
 import { useNavigate } from 'react-router-dom';
+import { showToast } from './Toast';
 
 export function EventModeToggle() {
   const { eventMode, setEventModeEnabled, setActiveFolderId, toggleEventMode } = useEventMode();
@@ -56,7 +57,7 @@ export function EventModeToggle() {
             <button
               onClick={() => {
                 if (folders.length === 0) {
-                  alert('Please create a folder first');
+                  showToast('Please create a folder first', 'error');
                   navigate('/folders');
                   return;
                 }
