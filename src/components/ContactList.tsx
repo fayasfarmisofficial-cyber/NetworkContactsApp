@@ -7,7 +7,7 @@ import { ContactCard } from './ContactCard';
 import { sortContactsAlphabetically } from '../utils/helpers';
 import { generateMockContacts, isMockContact } from '../utils/mockData';
 import { Contact } from '../types';
-import { SAMPLE_DATA_INITIALIZED_KEY, WELCOME_POPUP_DISABLED_KEY } from '../utils/constants';
+import { SAMPLE_DATA_INITIALIZED_KEY, WELCOME_POPUP_DISABLED_KEY, SHOW_ALL_CONTACTS_KEY } from '../utils/constants';
 import { showToast } from './Toast';
 import { useAppKeyboardShortcuts } from '../utils/keyboardShortcuts';
 import { WelcomePopup } from './WelcomePopup';
@@ -16,7 +16,7 @@ export function ContactList() {
   const navigate = useNavigate();
   const { contacts, loading, searchQuery, addMultipleContacts, removeMultipleContacts, exportContacts, importContacts } = useContacts();
   const { folders, reorderFolders, addFolder, refreshFolders } = useFolders();
-  
+
   // Enable keyboard shortcuts
   useAppKeyboardShortcuts();
   const [draggedFolderId, setDraggedFolderId] = useState<string | null>(null);
@@ -25,21 +25,32 @@ export function ContactList() {
   const [hasInitializedExpansion, setHasInitializedExpansion] = useState(false);
   const [isPopulatingMockData, setIsPopulatingMockData] = useState(false);
   const [isRemovingMockData, setIsRemovingMockData] = useState(false);
-  const [showAllContacts, setShowAllContacts] = useState<Record<string, boolean>>({});
+  const [showAllContacts, setShowAllContacts] = useState<Record<string, boolean>>(() => {
+    // Initialize from Settings preference
+    const savedShowAll = localStorage.getItem(SHOW_ALL_CONTACTS_KEY);
+    if (savedShowAll === 'true') {
+      // Pre-expand all folders by returning a dummy state; handled below in rendering
+      return {};
+    }
+    return {};
+  });
+  const [globalShowAll] = useState(() => {
+    return localStorage.getItem(SHOW_ALL_CONTACTS_KEY) === 'true';
+  });
   const [isBulkOperation, setIsBulkOperation] = useState(false);
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
 
   // Filter contacts by search query
   const filteredContacts = searchQuery.trim()
     ? contacts.filter(contact => {
-        const lowerQuery = searchQuery.toLowerCase();
-        return (
-          contact.name.toLowerCase().includes(lowerQuery) ||
-          contact.phone.includes(searchQuery) ||
-          contact.company?.toLowerCase().includes(lowerQuery) ||
-          contact.role?.toLowerCase().includes(lowerQuery)
-        );
-      })
+      const lowerQuery = searchQuery.toLowerCase();
+      return (
+        contact.name.toLowerCase().includes(lowerQuery) ||
+        contact.phone.includes(lowerQuery) ||
+        contact.company?.toLowerCase().includes(lowerQuery) ||
+        contact.role?.toLowerCase().includes(lowerQuery)
+      );
+    })
     : contacts;
 
   const getContactCount = (folderId: string): number => {
@@ -57,13 +68,7 @@ export function ContactList() {
     folder,
     contacts: getContactsByFolder(folder.id),
     count: getContactCount(folder.id),
-  })).sort((a, b) => {
-    // Sort: folders with contacts first, then by count (descending), then alphabetically
-    if (a.count > 0 && b.count === 0) return -1;
-    if (a.count === 0 && b.count > 0) return 1;
-    if (a.count !== b.count) return b.count - a.count;
-    return a.folder.name.localeCompare(b.folder.name);
-  });
+  }));
 
   // First-time initialization: pre-install sample data
   useEffect(() => {
@@ -107,7 +112,7 @@ export function ContactList() {
   // Show welcome popup when sample data exists (if not disabled)
   useEffect(() => {
     if (loading) return;
-    
+
     const isPopupDisabled = localStorage.getItem(WELCOME_POPUP_DISABLED_KEY) === 'true';
     if (isPopupDisabled) {
       setShowWelcomePopup(false);
@@ -126,7 +131,7 @@ export function ContactList() {
   useEffect(() => {
     if (isBulkOperation || hasInitializedExpansion) return;
     if (foldersWithContacts.length === 0) return;
-    
+
     const foldersToExpand = new Set<string>();
     foldersWithContacts.forEach(({ folder, count }) => {
       if (count > 0) {
@@ -201,10 +206,10 @@ export function ContactList() {
 
     try {
       setIsPopulatingMockData(true);
-      
+
       // Refresh folders to get latest state (system folders might have been initialized)
       await refreshFolders();
-      
+
       // Get current folders (may have been updated by refreshFolders, but will use what we have)
       // The folders will update on next render, so we check after a brief delay
       let folderIds = folders.map(f => f.id);
@@ -216,7 +221,7 @@ export function ContactList() {
           // Folders will be refreshed by addFolder, so get them after a brief delay
           await new Promise(resolve => setTimeout(resolve, 100));
           folderIds = folders.map(f => f.id);
-          
+
           // If still no folders, try one more time
           if (folderIds.length === 0) {
             await refreshFolders();
@@ -354,7 +359,7 @@ export function ContactList() {
   return (
     <div className="flex flex-col h-screen bg-page-bg">
       {/* Header */}
-      <div 
+      <div
         className="px-4 py-3 flex items-center justify-between flex-shrink-0"
         style={{
           backgroundColor: 'var(--color-surface-muted)',
@@ -367,7 +372,7 @@ export function ContactList() {
             onClick={handleExport}
             disabled={loading || contacts.length === 0}
             className="p-2 rounded-full min-w-[40px] min-h-[40px] flex items-center justify-center transition-colors duration-150 disabled:opacity-50"
-            style={{ 
+            style={{
               color: 'var(--color-text-secondary)',
             }}
             onMouseEnter={(e) => {
@@ -399,7 +404,7 @@ export function ContactList() {
             onClick={handleImport}
             disabled={loading}
             className="p-2 rounded-full min-w-[40px] min-h-[40px] flex items-center justify-center transition-colors duration-150 disabled:opacity-50"
-            style={{ 
+            style={{
               color: 'var(--color-text-secondary)',
             }}
             onMouseEnter={(e) => {
@@ -449,7 +454,7 @@ export function ContactList() {
           <button
             onClick={() => navigate('/settings')}
             className="p-2 rounded-full min-w-[40px] min-h-[40px] flex items-center justify-center transition-colors duration-150"
-            style={{ 
+            style={{
               color: 'var(--color-text-secondary)',
             }}
             onMouseEnter={(e) => {
@@ -491,7 +496,7 @@ export function ContactList() {
             onClose={() => setShowWelcomePopup(false)}
           />
         )}
-        
+
         {isPopulatingMockData && (
           <div className="absolute inset-0 bg-page-bg/80 backdrop-blur-sm z-50 flex items-center justify-center">
             <div className="bg-surface rounded-lg px-6 py-4 shadow-lg border border-border">
@@ -540,8 +545,8 @@ export function ContactList() {
               className="px-4 py-2 bg-accent text-white text-body-secondary font-medium rounded-lg hover:opacity-90 active:opacity-80 disabled:opacity-50 transition-opacity duration-150 min-h-[44px]"
               style={{ backgroundColor: 'var(--color-accent)' }}
             >
-              {isPopulatingMockData 
-                ? (contacts.filter(isMockContact).length > 0 ? 'Removing sample contacts...' : 'Adding sample contacts...') 
+              {isPopulatingMockData
+                ? (contacts.filter(isMockContact).length > 0 ? 'Removing sample contacts...' : 'Adding sample contacts...')
                 : (contacts.filter(isMockContact).length > 0 ? `Remove ${contacts.filter(isMockContact).length} sample contacts` : 'Try sample data')
               }
             </button>
@@ -575,8 +580,8 @@ export function ContactList() {
               className="px-4 py-2 bg-accent text-white text-body-secondary font-medium rounded-lg hover:opacity-90 active:opacity-80 disabled:opacity-50 transition-opacity duration-150 min-h-[44px]"
               style={{ backgroundColor: 'var(--color-accent)' }}
             >
-              {isPopulatingMockData 
-                ? (contacts.filter(isMockContact).length > 0 ? 'Removing sample contacts...' : 'Adding sample contacts...') 
+              {isPopulatingMockData
+                ? (contacts.filter(isMockContact).length > 0 ? 'Removing sample contacts...' : 'Adding sample contacts...')
                 : (contacts.filter(isMockContact).length > 0 ? `Remove ${contacts.filter(isMockContact).length} sample contacts` : 'Try sample data')
               }
             </button>
@@ -588,7 +593,7 @@ export function ContactList() {
               const isEmpty = count === 0;
               const isDragged = draggedFolderId === folder.id;
               const isDragOver = dragOverFolderId === folder.id;
-              const showAll = showAllContacts[folder.id] || false;
+              const showAll = showAllContacts[folder.id] || globalShowAll || false;
               const displayedContacts = showAll ? contacts : contacts.slice(0, 5);
               const hasMore = contacts.length > 5;
 
@@ -601,11 +606,9 @@ export function ContactList() {
                   onDragOver={(e) => handleDragOver(e, folder.id)}
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, folder.id)}
-                  className={`transition-all duration-200 ${
-                    isDragged ? 'opacity-30' : ''
-                  } ${
-                    isDragOver ? 'transform translate-y-2 border-t-2 border-accent' : ''
-                  }`}
+                  className={`transition-all duration-200 ${isDragged ? 'opacity-30' : ''
+                    } ${isDragOver ? 'transform translate-y-2 border-t-2 border-accent' : ''
+                    }`}
                 >
                   {/* Folder Header */}
                   <div
@@ -622,20 +625,18 @@ export function ContactList() {
                         e.preventDefault();
                       }
                     }}
-                    className={`sticky top-[57px] px-4 py-3.5 z-[5] select-none ${
-                      isEmpty 
-                        ? 'border-b border-border/30' 
+                    className={`sticky top-[57px] px-4 py-3.5 z-[5] select-none ${isEmpty
+                        ? 'border-b border-border/30'
                         : isExpanded
-                          ? '' 
+                          ? ''
                           : 'border-b border-border/20'
-                    } ${
-                      !isEmpty ? 'cursor-pointer active:opacity-80' : 'cursor-default'
-                    } transition-all duration-150`}
+                      } ${!isEmpty ? 'cursor-pointer active:opacity-80' : 'cursor-default'
+                      } transition-all duration-150`}
                     style={{
                       backgroundColor: dragOverFolderId === folder.id
                         ? 'var(--color-surface-muted)'
-                        : isEmpty 
-                          ? 'var(--color-surface-muted)' 
+                        : isEmpty
+                          ? 'var(--color-surface-muted)'
                           : isExpanded
                             ? 'var(--color-surface-muted)'  /* Active folder - distinct surface */
                             : 'var(--color-surface-muted)',
@@ -646,11 +647,10 @@ export function ContactList() {
                       <div className="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
                         {!isEmpty && (
                           <svg
-                            className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${
-                              isExpanded 
-                                ? 'rotate-90 text-text-secondary' 
+                            className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${isExpanded
+                                ? 'rotate-90 text-text-secondary'
                                 : 'rotate-0 text-text-muted opacity-60'
-                            }`}
+                              }`}
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -678,23 +678,21 @@ export function ContactList() {
                             />
                           </svg>
                         )}
-                        <h2 className={`text-section-title truncate flex-1 min-w-0 leading-tight ${
-                          isEmpty 
-                            ? 'text-text-muted' 
+                        <h2 className={`text-section-title truncate flex-1 min-w-0 leading-tight ${isEmpty
+                            ? 'text-text-muted'
                             : isExpanded
                               ? 'text-text-primary font-semibold'  /* Active folder - stronger emphasis */
                               : 'text-text-primary'
-                        }`}>
+                          }`}>
                           {folder.name}
                         </h2>
                       </div>
-                      <span className={`text-meta flex-shrink-0 whitespace-nowrap ml-2 leading-tight ${
-                        isEmpty 
-                          ? 'text-text-muted' 
+                      <span className={`text-meta flex-shrink-0 whitespace-nowrap ml-2 leading-tight ${isEmpty
+                          ? 'text-text-muted'
                           : isExpanded
                             ? 'text-text-secondary'  /* Active folder - slightly more visible */
                             : 'text-text-muted'
-                      }`}>
+                        }`}>
                         {count} {count === 1 ? 'contact' : 'contacts'}
                       </span>
                     </div>
@@ -704,8 +702,8 @@ export function ContactList() {
                   {!isEmpty && isExpanded && (
                     <div className="bg-surface relative z-0">
                       {displayedContacts.map((contact, index) => (
-                        <ContactCard 
-                          key={contact.id} 
+                        <ContactCard
+                          key={contact.id}
                           contact={contact}
                           isLast={index === displayedContacts.length - 1 && !hasMore && !showAll}
                         />

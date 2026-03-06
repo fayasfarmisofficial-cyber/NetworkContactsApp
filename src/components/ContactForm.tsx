@@ -70,31 +70,31 @@ export function ContactForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validation
     const newErrors: { name?: string; phone?: string } = {};
-    
+
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
     }
-    
+
     if (!formData.phone.trim()) {
       newErrors.phone = 'Phone number is required';
     } else if (!isValidPhoneNumber(formData.phone)) {
       newErrors.phone = 'Please enter a valid phone number';
     }
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       showToast('Please fix the errors before saving', 'error');
       return;
     }
-    
+
     setErrors({});
 
     try {
       setSaving(true);
-      
+
       const contactData = {
         name: formData.name.trim(),
         phone: normalizePhoneNumber(formData.phone), // Store normalized phone number
@@ -112,7 +112,7 @@ export function ContactForm() {
         await addNewContact(contactData);
         showToast('Contact added successfully', 'success');
       }
-      
+
       navigate('/');
     } catch (error) {
       console.error('Error saving contact:', error);
@@ -179,9 +179,8 @@ export function ContactForm() {
               id="name"
               value={formData.name}
               onChange={handleNameChange}
-              className={`w-full px-4 py-2.5 text-body-secondary bg-surface border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-text-primary placeholder:text-text-muted transition-colors duration-150 ${
-                errors.name ? 'border-red-500' : 'border-border'
-              }`}
+              className={`w-full px-4 py-2.5 text-body-secondary bg-surface border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-text-primary placeholder:text-text-muted transition-colors duration-150 ${errors.name ? 'border-red-500' : 'border-border'
+                }`}
               required
             />
             {errors.name && (
@@ -200,9 +199,8 @@ export function ContactForm() {
               value={formData.phone}
               onChange={handlePhoneChange}
               placeholder="(123) 456-7890"
-              className={`w-full px-4 py-2.5 text-body-secondary bg-surface border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-text-primary placeholder:text-text-muted transition-colors duration-150 ${
-                errors.phone ? 'border-red-500' : 'border-border'
-              }`}
+              className={`w-full px-4 py-2.5 text-body-secondary bg-surface border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-text-primary placeholder:text-text-muted transition-colors duration-150 ${errors.phone ? 'border-red-500' : 'border-border'
+                }`}
               required
             />
             {errors.phone && (
@@ -251,8 +249,8 @@ export function ContactForm() {
                 id="linkedin"
                 value={formData.linkedin}
                 onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
-              placeholder="https://linkedin.com/in/..."
-              className="flex-1 px-4 py-2.5 text-body-secondary bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-text-primary placeholder:text-text-muted transition-colors duration-150"
+                placeholder="https://linkedin.com/in/..."
+                className="flex-1 px-4 py-2.5 text-body-secondary bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-text-primary placeholder:text-text-muted transition-colors duration-150"
               />
               <button
                 type="button"
@@ -298,27 +296,28 @@ export function ContactForm() {
             </div>
           )}
         </div>
-      </form>
 
-      {/* Actions */}
-      <div className="bg-surface border-t border-border px-4 py-3">
+        {/* Actions */}
+        <div className="bg-surface border-t border-border px-4 py-3">
           <button
             type="submit"
-            onClick={handleSubmit}
             disabled={saving}
             className="w-full bg-accent text-white font-medium py-3 rounded-lg active:opacity-90 min-h-[44px] disabled:opacity-50 transition-opacity duration-150"
             style={{ backgroundColor: 'var(--color-accent)' }}
           >
             {saving ? 'Saving...' : isEditing ? 'Save Changes' : 'Save Contact'}
           </button>
-      </div>
+        </div>
+      </form>
+
+
 
       {/* QR Scanner Modal */}
       {showQRScanner && (
         <QRScanner
           onScan={(result: QRScanResult) => {
-            setFormData({ 
-              ...formData, 
+            setFormData({
+              ...formData,
               linkedin: result.linkedin,
               name: result.name || formData.name, // Only update name if it was extracted
             });

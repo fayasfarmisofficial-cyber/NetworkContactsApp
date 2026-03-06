@@ -26,8 +26,17 @@ export const MOCK_CONTACT_PHONES = new Set([
   '+1 (555) 012-6789',
 ]);
 
+// Pre-compute normalized (digits-only) mock phone numbers for comparison
+const MOCK_CONTACT_PHONES_NORMALIZED = new Set(
+  Array.from(MOCK_CONTACT_PHONES).map(phone => phone.replace(/\D/g, ''))
+);
+
 export function isMockContact(contact: Contact): boolean {
-  return MOCK_CONTACT_PHONES.has(contact.phone);
+  // Check both formatted and normalized versions to handle contacts
+  // that may have been edited and re-saved with digits-only format
+  if (MOCK_CONTACT_PHONES.has(contact.phone)) return true;
+  const normalizedPhone = contact.phone.replace(/\D/g, '');
+  return MOCK_CONTACT_PHONES_NORMALIZED.has(normalizedPhone);
 }
 
 export function generateMockContacts(folderIds: string[]): MockContactData[] {
